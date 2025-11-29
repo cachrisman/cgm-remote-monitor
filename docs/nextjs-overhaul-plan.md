@@ -142,5 +142,6 @@ packages/
   migration approach before porting additional features.
 - **Phase 2 Quality Foundation (Testing & Parity)**: Introduced a Jest-based testing stack with Testing Library utilities,
   contract tests for the Nightscout API client, route handler regression coverage, and UI regression coverage to guarantee the
-  Next.js dashboard matches the legacy API contract before expanding feature work.
+  Next.js dashboard matches the legacy API contract before expanding feature work. See `docs/proposals/nextjs-phase-2-pr-plan.md`
+  for the detailed implementation proposal feeding the Phase 2 pull request.
 
