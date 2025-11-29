@@ -140,4 +140,7 @@ packages/
   TypeScript settings, and an initial dashboard that reads from legacy Nightscout APIs using server components. Established a
   typed API client wrapper (`lib/nightscout-client.ts`) and a first route handler (`app/api/status/route.ts`) to validate the
   migration approach before porting additional features.
+- **Phase 2 Quality Foundation (Testing & Parity)**: Introduced a Jest-based testing stack with Testing Library utilities,
+  contract tests for the Nightscout API client, route handler regression coverage, and UI regression coverage to guarantee the
+  Next.js dashboard matches the legacy API contract before expanding feature work.
 

@@ -40,8 +40,9 @@ export function TrendSparkline({ entries }: TrendSparklineProps) {
   }, [entries]);
 
   return (
-    <svg viewBox="0 0 120 60" className="h-16 w-full">
+    <svg viewBox="0 0 120 60" className="h-16 w-full" aria-hidden="true">
       <path
+        data-testid="sparkline-path"
         d={path}
         fill="none"
         stroke="url(#glucoseGradient)"
