@@ -144,4 +144,8 @@ packages/
   contract tests for the Nightscout API client, route handler regression coverage, and UI regression coverage to guarantee the
   Next.js dashboard matches the legacy API contract before expanding feature work. See `docs/proposals/nextjs-phase-2-pr-plan.md`
   for the detailed implementation proposal feeding the Phase 2 pull request.
+- **Phase 3 Front-End Refresh (Dashboard & Deployability)**: Expanded the Next.js dashboard with time-in-range metrics,
+  richer cards for recent readings and device health, and reusable UI primitives to accelerate upcoming profile/report/admin
+  migrations. Documented Vercel deployment steps for the Next.js branch so preview environments are available despite the
+  legacy Express main branch being incompatible with the Vercel platform.
 

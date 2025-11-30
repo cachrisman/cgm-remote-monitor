@@ -11,7 +11,10 @@
 
 body {
   margin: 0;
-  background-color: var(--background, #0f172a);
+  background: radial-gradient(circle at 20% 20%, rgba(79, 70, 229, 0.12), transparent 25%),
+    radial-gradient(circle at 80% 0%, rgba(16, 185, 129, 0.1), transparent 25%),
+    radial-gradient(circle at 50% 60%, rgba(8, 47, 73, 0.18), transparent 35%),
+    var(--background, #0f172a);
   color: var(--foreground, #e2e8f0);
 }
 
