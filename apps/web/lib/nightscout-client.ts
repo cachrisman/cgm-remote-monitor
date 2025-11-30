@@ -1,4 +1,3 @@
-import { cache } from "react";
 import { getApiBaseUrl } from "./env";
 
 export type GlucoseValue = {
@@ -33,7 +32,7 @@ async function parseJson<T>(response: Response) {
   return (await response.json()) as T;
 }
 
-const fetchRecentEntries = cache(async (config: NightscoutClientConfig, limit: number) => {
+async function fetchRecentEntries(config: NightscoutClientConfig, limit: number) {
   const baseUrl = config.baseUrl ?? getApiBaseUrl();
   const url = new URL(`${baseUrl}/entries.json`);
   url.searchParams.set("count", String(limit));
@@ -61,9 +60,9 @@ const fetchRecentEntries = cache(async (config: NightscoutClientConfig, limit: n
       } satisfies GlucoseValue;
     })
     .filter(Boolean) as GlucoseValue[];
-});
+}
 
-const fetchStatus = cache(async (config: NightscoutClientConfig) => {
+async function fetchStatus(config: NightscoutClientConfig) {
   const baseUrl = config.baseUrl ?? getApiBaseUrl();
   const url = new URL(`${baseUrl}/status.json`);
 
@@ -93,7 +92,7 @@ const fetchStatus = cache(async (config: NightscoutClientConfig) => {
         } satisfies DeviceStatus;
       })
   } satisfies StatusSummary;
-});
+}
 
 export function createNightscoutClient(config: NightscoutClientConfig = {}) {
   return {

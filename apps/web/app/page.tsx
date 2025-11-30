@@ -56,7 +56,7 @@ export default async function DashboardPage() {
           </p>
           {fetchError ? (
             <p className="text-sm font-medium text-amber-300">
-              {fetchError}. Showing the most recently cached values instead.
+              {fetchError}. Live data is currently unavailable; showing placeholders until the connection is restored.
             </p>
           ) : null}
         </div>
@@ -88,7 +88,11 @@ export default async function DashboardPage() {
             <MetricCard
               title="Average"
               value={metrics.averageMgdl ? `${metrics.averageMgdl} mg/dL` : "–"}
-              description={metrics.min && metrics.max ? `Low ${metrics.min} • High ${metrics.max}` : "Waiting for data"}
+              description={
+                metrics.min !== null && metrics.max !== null
+                  ? `Low ${metrics.min} • High ${metrics.max}`
+                  : "Waiting for data"
+              }
               tone="default"
             />
           </section>

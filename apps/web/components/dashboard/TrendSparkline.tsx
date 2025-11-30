@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useId, useMemo } from "react";
 import type { GlucoseValue } from "@/lib/nightscout-client";
 
 type TrendSparklineProps = {
@@ -20,6 +20,8 @@ function scale(values: number[], size: number) {
 }
 
 export function TrendSparkline({ entries }: TrendSparklineProps) {
+  const gradientId = useId();
+
   const path = useMemo(() => {
     if (entries.length === 0) {
       return "";
@@ -45,12 +47,12 @@ export function TrendSparkline({ entries }: TrendSparklineProps) {
         data-testid="sparkline-path"
         d={path}
         fill="none"
-        stroke="url(#glucoseGradient)"
+        stroke={`url(#${gradientId})`}
         strokeWidth="3"
         strokeLinecap="round"
       />
       <defs>
-        <linearGradient id="glucoseGradient" x1="0" y1="0" x2="1" y2="0">
+        <linearGradient id={gradientId} x1="0" y1="0" x2="1" y2="0">
           <stop offset="0%" stopColor="#818CF8" />
           <stop offset="50%" stopColor="#22D3EE" />
           <stop offset="100%" stopColor="#34D399" />
