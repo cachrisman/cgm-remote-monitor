@@ -1,4 +1,5 @@
 import { calculateGlucoseMetrics } from "../analytics";
+
 import type { GlucoseValue } from "../nightscout-client";
 
 describe("calculateGlucoseMetrics", () => {

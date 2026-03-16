@@ -19,9 +19,46 @@ export type StatusSummary = {
 
 type NightscoutClientConfig = {
   baseUrl?: string;
+  /**
+   * Optional headers to pass through from the incoming request.
+   * Used for passing client auth tokens through server components.
+   * If not provided, requests will fail with 401 and the client component will handle auth.
+   */
+  headers?: HeadersInit;
 };
 
 const DEFAULT_REVALIDATE_SECONDS = 30;
+const DEFAULT_API_BASE = "/api/v1";
+
+/**
+ * Create headers for API requests from the provided config.
+ * If no headers are provided, returns empty headers (request will fail with 401,
+ * which is handled gracefully by the page component).
+ */
+function createRequestHeaders(config: NightscoutClientConfig): HeadersInit {
+  if (!config.headers) {
+    return {};
+  }
+  
+  const headers: HeadersInit = {};
+  
+  // Merge provided headers
+  if (config.headers instanceof Headers) {
+    config.headers.forEach((value, key) => {
+      headers[key] = value;
+    });
+  } else if (Array.isArray(config.headers)) {
+    // Array of [key, value] pairs
+    for (const [key, value] of config.headers) {
+      headers[key] = value;
+    }
+  } else {
+    // Record/object
+    Object.assign(headers, config.headers);
+  }
+
+  return headers;
+}
 
 async function parseJson<T>(response: Response) {
   if (!response.ok) {
@@ -32,12 +69,68 @@ async function parseJson<T>(response: Response) {
   return (await response.json()) as T;
 }
 
-async function fetchRecentEntries(config: NightscoutClientConfig, limit: number) {
+function sanitizeBaseUrl(baseUrl: string) {
+  return baseUrl.replace(/\/$/, "");
+}
+
+function getDefaultOrigin() {
+  if (process.env.NEXT_PUBLIC_SITE_URL) {
+    return process.env.NEXT_PUBLIC_SITE_URL.replace(/\/$/, "");
+  }
+
+  if (process.env.NEXT_PRIVATE_INTERNAL_ORIGIN) {
+    return process.env.NEXT_PRIVATE_INTERNAL_ORIGIN.replace(/\/$/, "");
+  }
+
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL.replace(/\/$/, "")}`;
+  }
+
+  return "http://localhost:3000";
+}
+
+function buildUrl(
+  baseUrl: string,
+  path: string,
+  searchParams?: Record<string, string>
+) {
+  const cleanedBase = sanitizeBaseUrl(baseUrl || DEFAULT_API_BASE);
+  const query =
+    searchParams && Object.keys(searchParams).length > 0
+      ? `?${new URLSearchParams(searchParams).toString()}`
+      : "";
+
+  const isAbsolute = /^https?:\/\//i.test(cleanedBase);
+  const origin = isAbsolute ? "" : getDefaultOrigin();
+
+  const prefix = isAbsolute ? cleanedBase : `${origin}${cleanedBase}`;
+  return `${prefix}${path}${query}`;
+}
+
+type EntriesQueryOptions = {
+  limit?: number;
+  hours?: number;
+};
+
+async function fetchRecentEntries(config: NightscoutClientConfig, options: EntriesQueryOptions = {}) {
   const baseUrl = config.baseUrl ?? getApiBaseUrl();
-  const url = new URL(`${baseUrl}/entries.json`);
-  url.searchParams.set("count", String(limit));
+  
+  const params: Record<string, string> = {};
+  
+  // If hours specified, use date filter for exact time range
+  if (options.hours) {
+    const cutoff = Date.now() - (options.hours * 60 * 60 * 1000);
+    params["find[date][$gte]"] = String(cutoff);
+    // Set a high count to get all entries in the range
+    params["count"] = "10000";
+  } else if (options.limit) {
+    params["count"] = String(options.limit);
+  }
+  
+  const url = buildUrl(baseUrl, "/entries", params);
 
   const response = await fetch(url, {
+    headers: createRequestHeaders(config),
     next: { revalidate: DEFAULT_REVALIDATE_SECONDS }
   });
 
@@ -64,9 +157,10 @@ async function fetchRecentEntries(config: NightscoutClientConfig, limit: number)
 
 async function fetchStatus(config: NightscoutClientConfig) {
   const baseUrl = config.baseUrl ?? getApiBaseUrl();
-  const url = new URL(`${baseUrl}/status.json`);
+  const url = buildUrl(baseUrl, "/status");
 
   const response = await fetch(url, {
+    headers: createRequestHeaders(config),
     next: { revalidate: DEFAULT_REVALIDATE_SECONDS }
   });
 
@@ -97,7 +191,10 @@ async function fetchStatus(config: NightscoutClientConfig) {
 export function createNightscoutClient(config: NightscoutClientConfig = {}) {
   return {
     getRecentEntries(limit = 24) {
-      return fetchRecentEntries(config, limit);
+      return fetchRecentEntries(config, { limit });
+    },
+    getEntriesByHours(hours: number) {
+      return fetchRecentEntries(config, { hours });
     },
     getStatus() {
       return fetchStatus(config);

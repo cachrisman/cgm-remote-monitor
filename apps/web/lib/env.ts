@@ -1,4 +1,4 @@
-const FALLBACK_API_BASE_URL = "http://localhost:1337/api/v1";
+const FALLBACK_API_BASE_URL = "/api/v1";
 
 function sanitizeBaseUrl(url: string) {
   return url.replace(/\/$/, "");

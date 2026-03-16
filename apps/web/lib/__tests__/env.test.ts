@@ -14,7 +14,7 @@ describe("getApiBaseUrl", () => {
   });
 
   it("returns the fallback url when no environment variables are set", () => {
-    expect(getApiBaseUrl()).toBe("http://localhost:1337/api/v1");
+    expect(getApiBaseUrl()).toBe("/api/v1");
   });
 
   it("prefers the public environment variable", () => {

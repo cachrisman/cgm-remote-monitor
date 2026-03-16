@@ -1,9 +1,15 @@
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  experimental: {
-    serverActions: true
+  turbopack: {
+    // Pin the workspace root to this app to silence multi-lockfile warnings.
+    root: __dirname
   }
 };
 
-module.exports = nextConfig;
+export default nextConfig;

@@ -1,9 +1,11 @@
-import nextJest from "next/jest";
+// @ts-check
+const nextJest = require("next/jest");
 
 const createJestConfig = nextJest({
   dir: "./"
 });
 
+/** @type {import('jest').Config} */
 const customJestConfig = {
   clearMocks: true,
   collectCoverageFrom: ["<rootDir>/{app,components,lib}/**/*.{ts,tsx}", "!<rootDir>/**/index.{ts,tsx}"],
@@ -17,4 +19,5 @@ const customJestConfig = {
   transform: {}
 };
 
-export default createJestConfig(customJestConfig);
+module.exports = createJestConfig(customJestConfig);
+

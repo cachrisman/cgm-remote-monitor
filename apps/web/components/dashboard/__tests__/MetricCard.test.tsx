@@ -1,4 +1,5 @@
 import { render, screen } from "@testing-library/react";
+
 import { MetricCard } from "../MetricCard";
 
 describe("MetricCard", () => {

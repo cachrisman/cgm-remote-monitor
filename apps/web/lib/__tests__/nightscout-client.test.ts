@@ -29,7 +29,7 @@ describe("Nightscout client", () => {
 
       expect(fetchMock).toHaveBeenCalledTimes(1);
       const [requestedUrl, options] = fetchMock.mock.calls[0];
-      expect(String(requestedUrl)).toBe(`${baseUrl}/entries.json?count=3`);
+      expect(String(requestedUrl)).toBe(`${baseUrl}/entries?count=3`);
       expect(options).toMatchObject({ next: { revalidate: 30 } });
       expect(result).toEqual([
         {
@@ -111,7 +111,7 @@ describe("Nightscout client", () => {
       const status = await client.getStatus();
 
       const [requestedUrl, options] = fetchMock.mock.calls[0];
-      expect(String(requestedUrl)).toBe(`${baseUrl}/status.json`);
+      expect(String(requestedUrl)).toBe(`${baseUrl}/status`);
       expect(options).toMatchObject({ next: { revalidate: 30 } });
       expect(status).toEqual({
         state: "ok",
