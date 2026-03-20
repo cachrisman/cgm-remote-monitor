@@ -1,5 +1,8 @@
 # Sawtooth precompute (Trio complication visible recency)
 
+**Version:** v1  
+**Last updated:** 2026-03-20 09:37 CET
+
 Standalone job that queries Better Stack for Trio GTL logs, reconstructs the per-minute sawtooth, and pushes gauge metrics to the **Trio Complication Recency** Prometheus source. Run by cron every minute.
 
 ## Environment variables
@@ -86,6 +89,36 @@ Use your desired start epoch (e.g. one hour ago as above). After that, deploy an
 
 If the web dyno is Basic or Standard (never sleeps), you can run the job inside the web process on a 60s interval instead of a separate worker. Gate it with an env var (e.g. `SAWTOOTH_RUN_IN_PROCESS=1`) and call `require('./lib/sawtooth-precompute/run').run()` from a setInterval. Use MongoDB backend. This project’s chosen approach is the dedicated worker above.
 
+## Observability (cron / Better Stack)
+
+Heroku’s log drain sets `dt` on the **cron** log source at receive time, so those lines are suitable for correlating precompute behavior with wall clock.
+
+Each successful run emits **one** structured line (no separate `start` / `gtl_rows` lines). Shape:
+
+```text
+sawtooth-precompute pushed gtl_rows=<n> parsed=<n> deduped=<n> skipped_no_anchor=<n> minutes=<n> end_minute=<epoch> anchor_gtl_epoch=<epoch> anchor_gtl_age_seconds=<s> emit_delay_actual_seconds=<s>
+```
+
+When there is nothing to emit: `sawtooth-precompute skip (nothing to do)`.
+
+- **gtl_rows / parsed / deduped / skipped_no_anchor** — Query and pipeline health (zero rows, parse drops, dedupe collapse, minutes with no ASOF anchor).
+- **minutes** — Gauge points pushed this run (same count the old `emitted=` field carried).
+- **end_minute** — Last minute included in this emit (same as internal `to_minute`).
+- **anchor_gtl_epoch** — `gtl_epoch` of the GTL row that anchored the **last emitted** minute (`-1` if nothing was emitted).
+- **anchor_gtl_age_seconds** — Wall time at log minus `anchor_gtl_epoch` (staleness of the precompute’s view at emit time; `-1` if no anchor).
+- **emit_delay_actual_seconds** — Wall time at log minus `end_minute` (actual lag vs the emitted minute boundary).
+
+For metrics extracted from this line in Better Stack, filter out sentinel values (`anchor_gtl_age_seconds >= 0`, etc.) so empty runs do not skew averages.
+
+Example extractions (cron log source; adjust `source_id` / team table as needed):
+
+| Metric | Expression (message field) | Notes |
+|--------|----------------------------|--------|
+| `sawtooth_anchor_gtl_age_seconds` | `toInt64OrNull(replaceRegexpOne(message, '.*anchor_gtl_age_seconds=(\\d+).*', '\\1'))` | Use `>= 0` filter |
+| `sawtooth_emit_delay_actual_seconds` | `toInt64OrNull(replaceRegexpOne(message, '.*emit_delay_actual_seconds=(\\d+).*', '\\1'))` | |
+| `sawtooth_emitted_count` | `if(message LIKE '%sawtooth-precompute pushed%', toInt64OrNull(replaceRegexpOne(message, '.*minutes=(\\d+).*', '\\1')), NULL)` | Sum per window |
+| `sawtooth_gtl_rows` | `if(message LIKE '%sawtooth-precompute pushed%', toInt64OrNull(replaceRegexpOne(message, '.*gtl_rows=(\\d+).*', '\\1')), NULL)` | Same line as `pushed` |
+
 ## Limitations (v1)
 
 If the push to Better Stack succeeds but the process exits before `pushed_through_minute` is persisted (e.g. crash or kill), the next run will retry that range and may resend the same metrics. This is a documented v1 limitation, not a code defect.
@@ -93,3 +126,12 @@ If the push to Better Stack succeeds but the process exits before `pushed_throug
 ## Design and rollout
 
 See implementation plan and design in the Trio-dev repo: `docs/in-progress/nightscout-sawtooth-precompute/`.
+
+---
+
+## Changelog
+
+### v1 (2026-03-20 09:37 CET)
+
+- Initial **document** version for this README (not a runtime or npm package version).
+- Describes the single consolidated `pushed` log line (pipeline counters + `minutes` + `end_minute` + anchor/emit lag fields), skip line, and Better Stack metric extraction examples.
