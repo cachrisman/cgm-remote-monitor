@@ -1,7 +1,7 @@
 # Better Stack guide (Nightscout / cgm-remote-monitor)
 
-**Version:** v1.0  
-**Last updated:** 2026-03-20
+**Version:** v1.1  
+**Last updated:** 2026-03-20 15:09 CET
 
 Operational reference for Better Stack: log queries (MCP), metrics extraction (REST), and dashboards. Use with root **`AGENTS.md`** (safety and guardrails).
 
@@ -138,8 +138,26 @@ curl -X POST \
 ### Dashboard query habits
 
 - Use **`FROM {{source}}`** with dashboard source variables rather than hardcoding raw table names where possible.
-- Use **`{{time}}`**, **`{{start_time}}`**, **`{{end_time}}`** for ranges.
+- Use **`{{start_time}}`** and **`{{end_time}}`** in **`WHERE dt BETWEEN …`** for filtering.
+- **`{{time}}`** expands to a bucket width that depends on the dashboard time range (often **~5 minutes** for wide windows). That is **not** a minimum storage resolution for Prometheus-like metrics — it is query-side grouping. For **fixed 1-minute** buckets, **do not** use `{{time}}` in `SELECT`/`GROUP BY`; bucket on `dt` explicitly (see below).
 - Extracted metrics often appear as **columns**, not a generic `name` row — avoid filters like `AND name = 'metric_name'` unless your data model uses that.
+
+### Fixed 1-minute buckets (Prometheus-like gauge)
+
+Use **`toStartOfInterval(dt, INTERVAL 1 MINUTE)`** so the chart/table aligns with one sample per wall minute (e.g. precomputed complication recency):
+
+```sql
+SELECT
+  toStartOfInterval(dt, INTERVAL 1 MINUTE) AS time,
+  avgMerge(value_avg) AS value
+FROM {{source}}
+WHERE name = 'complication_visible_recency_seconds'
+  AND dt BETWEEN {{start_time}} AND {{end_time}}
+GROUP BY time
+ORDER BY time
+```
+
+`toStartOfMinute(dt)` is often equivalent; `toStartOfInterval(..., INTERVAL 1 MINUTE)` matches Better Stack’s own interval style. With **one gauge point per minute**, `avgMerge(value_avg)` matches that point; if multiple points land in the same minute, consider **`maxMerge(value_max)`** to emphasize peaks.
 
 ### Known quirks
 
@@ -152,4 +170,5 @@ curl -X POST \
 
 | Version | Date | Summary |
 |---------|------|---------|
+| v1.1 | 2026-03-20 15:09 CET | Dashboards: clarify that `{{time}}` drives bucket width (often 5m), not a metric-source limit; add **fixed 1-minute** SQL using `toStartOfInterval(dt, INTERVAL 1 MINUTE)` for `complication_visible_recency_seconds`. |
 | v1.0 | 2026-03-20 | Initial Nightscout-focused guide: MCP log workflow, ClickHouse notes, REST metrics, dashboards. Adapted from an internal multi-app guide; stripped other-product names and paths. |

@@ -1,4 +1,4 @@
-# AGENTS.md — v2.1
+# AGENTS.md — v2.2
 
 Instructions for AI agents working in this repository (**Nightscout / cgm-remote-monitor**).
 
@@ -8,7 +8,7 @@ Instructions for AI agents working in this repository (**Nightscout / cgm-remote
 
 2) **Do not commit or push** unless explicitly asked. Summarize changes first.
 
-3) **For plan/workflow document edits**, increment the document’s version and update its changelog in the same change.
+3) **For plan/workflow document edits**, increment the document's version and update its changelog in the same change. Changelog entries must include a full timestamp (`YYYY-MM-DD HH:mm TZ`); run `TZ=Europe/Paris date '+%Y-%m-%d %H:%M CET'` (or UTC equivalent) and use the exact output.
 
 4) **If you stash at the beginning of a workflow, pop at the end.** The worktree should match the prior state aside from commits you were asked to make. Use `git stash -u` when untracked files matter.
 
@@ -74,6 +74,9 @@ Agents may use the **`user-better-stack`** MCP server to query logs. If `telemet
 ---
 
 ## Changelog
+
+### v2.2 (2026-03-20 16:14 CET)
+- Added timestamp requirement to safety rule 3 (changelog entries must use full `YYYY-MM-DD HH:mm TZ` timestamps from shell output). Added `.cursor/rules/` with `docs-version-and-changelog.mdc` and `doc-timestamps.mdc` adapted from Trio-dev.
 
 ### v2.1 (2026-03-20)
 - Dropped the submodule safety rule — this repository does not use git submodules. Renumbered the remaining safety rules.
