@@ -1,7 +1,7 @@
 # Sawtooth precompute (Trio complication visible recency)
 
-**Version:** v4  
-**Last updated:** 2026-03-20 17:33 CET
+**Version:** v5  
+**Last updated:** 2026-03-20 21:58 CET
 
 Standalone job that queries Better Stack for Trio GTL logs, reconstructs the per-minute sawtooth, and pushes gauge metrics to the **Trio Complication Recency** Prometheus source. Run by cron every minute.
 
@@ -153,6 +153,11 @@ See implementation plan and design in the Trio-dev repo: `docs/in-progress/night
 ---
 
 ## Changelog
+
+### v5 (2026-03-20 21:58 CET)
+
+- **Off-wrist detection narrowed**: `battery_state=unknown` no longer triggers `is_off_wrist`; only `charging` and `full` (both mean the watch is on its charger) do. Prevents false zero periods during WatchOS complication/provider restarts that briefly report `unknown`.
+- **Transient query retry**: `fetch-gtl-logs.js` retries once (5 s delay) on transient errors (ETIMEDOUT, ECONNRESET, ECONNREFUSED, HTTP 503, timeout) before throwing. Non-transient errors still throw immediately. Logs WARN on retry.
 
 ### v4 (2026-03-20 17:33 CET)
 
